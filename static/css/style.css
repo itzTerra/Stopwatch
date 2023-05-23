@@ -17,10 +17,71 @@ body {
     flex-direction: column;
 }
 
-#back-to-top-btn{
-    display: none;
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    z-index: 200;
+main.container{
+    max-width: 800px;
 }
+
+#minutes{
+    display: none;
+}
+
+.btn-lg{
+    min-width: 6rem;
+}
+
+tbody tr > td:nth-last-of-type(1){
+    text-align: end;
+}
+
+.table-responsive{
+    overflow-y: auto;
+    max-height: 340px;
+}
+
+thead {
+    position: sticky;
+    top: -1px;
+    z-index: 500;
+}
+
+#min{
+    font-size: 5rem;
+}
+#sec{
+    font-size: 5rem;
+}
+#ms{
+    font-size: 2.25rem;
+}
+.unit{
+    font-size: 1.5rem;
+}
+@media (min-width: 576px) {
+    #min{
+        font-size: 7rem;
+    }
+    #sec{
+        font-size: 7rem;
+    }
+    #ms{
+        font-size: 3rem;
+    }
+    .unit{
+        font-size: 2rem;
+    }
+}
+@media (min-width: 768px) {
+    #min{
+        font-size: 10rem;
+    }
+    #sec{
+        font-size: 10rem;
+    }
+    #ms{
+        font-size: 4.5rem;
+    }
+    .unit{
+        font-size: 3rem;
+    }
+}
+
