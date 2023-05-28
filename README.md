@@ -1,7 +1,7 @@
 # Stopwatch :stopwatch:
 > It is a ...***stopwatch***. (I wanted to know if I'm improving at workout...)
 
-Static website that implements basic stopwatch functionality and more.
+Static [website](itzterra.github.io/Stopwatch/) that implements basic stopwatch functionality and more.
 
 ## Features
 - saves measured times in browser (localStorage)
@@ -14,5 +14,5 @@ Static website that implements basic stopwatch functionality and more.
 - other statistics
 
 ## Made with:
-- [Bootstrap5](https://getbootstrap.com/) styling
+- [**Bootstrap5**](https://getbootstrap.com/) styling
 - plain JavaScript (ES6)
