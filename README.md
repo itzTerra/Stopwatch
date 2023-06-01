@@ -8,6 +8,7 @@ Static [website](itzterra.github.io/Stopwatch/) that implements basic stopwatch 
 - calculates the average
 
 ## To do
+- history ordering
 - save to csv
 - trend graph
 - activity calendar (like in GitHub)
