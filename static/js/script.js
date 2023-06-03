@@ -132,7 +132,13 @@ function appendHistoryRow(date, time, timeMs){
     });
     newRow.appendChild(removeCell);
 
-    historyTableBody.appendChild(newRow);
+
+    if (historyTableBody.childElementCount == 0){
+        historyTableBody.appendChild(newRow);
+    }else{
+        historyTableBody.insertBefore(newRow, historyTableBody.children[0]);
+    }
+
     timeSum += timeMs;
     timeCount++
     updateAvg();
