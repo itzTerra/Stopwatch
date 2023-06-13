@@ -38,11 +38,17 @@ tbody tr > td:nth-last-of-type(1){
     max-height: 340px;
 }
 
-thead {
+/* thead {
     position: sticky;
     top: -1px;
     z-index: 500;
+} */
+
+
+.bootstrap-table .fixed-table-container.fixed-height .fixed-table-border{
+    border: 0;
 }
+
 
 #min{
     font-size: 5rem;

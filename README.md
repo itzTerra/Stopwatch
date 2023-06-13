@@ -6,14 +6,13 @@ Static [website](itzterra.github.io/Stopwatch/) that implements basic stopwatch 
 ## Features
 - saves measured times in browser (localStorage)
 - calculates the average
+- can save time history to TXT, CSV etc.
 
 ## To do
-- history ordering
-- save to csv
 - trend graph
 - activity calendar (like in GitHub)
 - other statistics
 
 ## Made with:
 - [**Bootstrap5**](https://getbootstrap.com/) styling
-- plain JavaScript (ES6)
+- [**Bootstrap Table**](https://bootstrap-table.com/) table features

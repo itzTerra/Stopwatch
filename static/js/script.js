@@ -10,16 +10,41 @@ const saveButton = document.getElementById("savebtn")
 const resetButton = document.getElementById("resetbtn");
 
 const avgTimeLabel = document.getElementById("avg-time");
+const timeCountLabel = document.getElementById("time-count");
 
+const $historyTable = $('#history-table');
 const historyTableBody = document.querySelector("#history-table tbody");
 
 
 var timeID = 0;
+
+// Average time variables
 var timeCount = 0;
 var timeSum = 0;
 
+// Timer variables
+var startTime;
+var elapsedTime = 0;
+var timerInterval;
+var started = false;
+var shownMinutes = false;
 
 var timeHistory = {}
+
+window.removeEvent = {
+    "click .btn-close": (e, value, row, index) => {
+        var removeID = row.id;
+        delete timeHistory[removeID];
+        localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
+
+        $historyTable.bootstrapTable('removeByUniqueId', removeID)
+        updateAvg(-row.timeMS);
+        updateTimeCount();
+    }
+}
+
+$historyTable.bootstrapTable();
+
 // Get history of measured times from localStorage
 var timeHistorySaved = JSON.parse(localStorage.getItem("timeHistory"));
 if (timeHistorySaved !== null){
@@ -29,14 +54,6 @@ if (timeHistorySaved !== null){
         appendHistoryRow(rec.date, rec.time, rec.ms);
     }
 }
-
-
-var startTime;
-var elapsedTime = 0;
-var timerInterval;
-var started = false;
-var shownMinutes = false;
-
 
 function startStop() {
     if (!started){
@@ -106,45 +123,29 @@ function save(){
     appendHistoryRow(curDate, time, elapsedTime);
 }
 
-function appendHistoryRow(date, time, timeMs){    
-    var newRow = document.createElement("tr");
-
-    var dateCell = document.createElement("td");
-    dateCell.textContent = date;
-    newRow.appendChild(dateCell);
-
-    var timeCell = document.createElement("td");
-    timeCell.textContent = time;
-    newRow.appendChild(timeCell);
-
-    var removeCell = document.createElement("td");
-    removeCell.innerHTML = removeButton;
-    
+function appendHistoryRow(date, time, timeMs){
     var removeID = timeID++;
-    removeCell.querySelector("button").addEventListener("click", function() {
-        delete timeHistory[removeID];
-        localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
 
-        historyTableBody.removeChild(newRow);
-        timeSum -= timeMs;
-        timeCount--;
-        updateAvg();
-    });
-    newRow.appendChild(removeCell);
+    $historyTable.bootstrapTable('insertRow', {index: 0, row: {
+        id: removeID,
+        date: date,
+        time: time,
+        timeMS: timeMs,
+        remove: ""
+    }});
 
-
-    if (historyTableBody.childElementCount == 0){
-        historyTableBody.appendChild(newRow);
-    }else{
-        historyTableBody.insertBefore(newRow, historyTableBody.children[0]);
-    }
-
-    timeSum += timeMs;
-    timeCount++
-    updateAvg();
+    updateAvg(timeMs);
+    updateTimeCount();
 }
 
-function updateAvg(){
+function updateAvg(value){
+    timeSum += value;
+    if (value > 0){
+        timeCount++
+    } else if (value < 0){
+        timeCount--
+    }
+
     if (timeCount == 0){
         avgTimeLabel.textContent = "0";
         return
@@ -158,6 +159,13 @@ function updateAvg(){
     avgTimeLabel.textContent = minutes + ":" + seconds + ":" + milliseconds;
 }
 
+function updateTimeCount(){
+    timeCountLabel.textContent = timeCount;
+}
+
+function removeFormatter(value, row, index){
+    return removeButton;
+}
 
 // window.onbeforeunload += () => {
 //     localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
