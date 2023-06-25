@@ -49,8 +49,6 @@ $historyTable.bootstrapTable();
 var timeHistorySaved = JSON.parse(localStorage.getItem("timeHistory"));
 if (timeHistorySaved !== null){
     for (var rec of Object.values(timeHistorySaved)){
-        timeHistory[timeID] = {...rec};
-
         appendHistoryRow(rec.date, rec.time, rec.ms);
     }
 }
@@ -113,17 +111,21 @@ function save(){
     var milliseconds = Math.floor(time.getUTCMilliseconds() / 10).toString().padStart(2, "0");
     time = `${minutes}:${seconds}:${milliseconds}`;
 
-    timeHistory[timeID] = {
-        "date": curDate, 
-        "time": time, 
-        "ms": elapsedTime
-    };
-    localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
-
     appendHistoryRow(curDate, time, elapsedTime);
+    saveTimeHistory();
+}
+
+function saveTimeHistory(){
+    localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
 }
 
 function appendHistoryRow(date, time, timeMs){
+    timeHistory[timeID] = {
+        "date": date, 
+        "time": time, 
+        "ms": timeMs
+    };
+
     var removeID = timeID++;
 
     $historyTable.bootstrapTable('insertRow', {index: 0, row: {

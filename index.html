@@ -41,11 +41,12 @@
             data-toolbar-align="right"
             data-show-export="true"
             data-unique-id="id"
-            data-height="340">
+            data-height="340"
+            data-sort-name="date" data-sort-order="desc">
             <thead class="bg-primary-subtle">
               <tr>
                 <th data-field="id" data-visible="false">ID</th>
-                <th data-field="date" data-sortable="true">Date</th>
+                <th data-field="date" data-sortable="true" data-sorter="dateSorter">Date</th>
                 <th data-field="time" data-sortable="true">Time</th>
                 <th data-field="timeMS" data-visible="false">ms</th>
                 <th data-field="remove" data-formatter="removeFormatter" data-events="window.removeEvent"></th>
@@ -68,6 +69,9 @@
         <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/tableExport.min.js"></script>
         <script src="https://unpkg.com/bootstrap-table@1.21.4/dist/bootstrap-table.min.js"></script>
         <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/export/bootstrap-table-export.min.js"></script>
+        
+        <script src="static/js/util.js"></script>
         <script src="static/js/script.js"></script>
+        <script src="static/js/fileReader.js"></script>
     </body>
 </html>
