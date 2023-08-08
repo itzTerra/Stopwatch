@@ -31,32 +31,45 @@
           </div>
           <hr>
           <div class="d-flex justify-content-between align-items-center">
-            <h3 class="display-6">History</h3>
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-tab-pane" type="button" role="tab" aria-controls="history-tab-pane" aria-selected="true">History</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="chart-tab" data-bs-toggle="tab" data-bs-target="#chart-tab-pane" type="button" role="tab" aria-controls="chart-tab-pane" aria-selected="false">Chart</button>
+              </li>
+            </ul>
             <span class="lead">Average: <strong id="avg-time">0</strong></span>
           </div>
-          <table 
-            class="table bg-body-tertiary table-striped fs-5" 
-            id="history-table"
-            data-buttons-toolbar="#toolbar"
-            data-toolbar-align="right"
-            data-show-export="true"
-            data-unique-id="id"
-            data-height="340"
-            data-sort-name="date" data-sort-order="desc">
-            <thead class="bg-primary-subtle">
-              <tr>
-                <th data-field="id" data-visible="false">ID</th>
-                <th data-field="date" data-sortable="true" data-sorter="dateSorter">Date</th>
-                <th data-field="time" data-sortable="true">Time</th>
-                <th data-field="timeMS" data-visible="false">ms</th>
-                <th data-field="remove" data-formatter="removeFormatter" data-events="window.removeEvent"></th>
-              </tr>
-            </thead>
-          </table>
-          <div class="d-flex justify-content-between mt-2">
-            <span class="text-muted"><span id="time-count">0</span> records</span>
-            <div id="toolbar">
-          </div>
+          <div class="tab-content">
+            <div class="tab-pane fade show active" id="history-tab-pane" role="tabpanel" aria-labelledby="history-tab" tabindex="0">
+              <table 
+                class="table bg-body-tertiary table-striped fs-5" 
+                id="history-table"
+                data-buttons-toolbar="#toolbar"
+                data-toolbar-align="right"
+                data-show-export="true"
+                data-unique-id="id"
+                data-height="340"
+                data-sort-name="date" data-sort-order="desc">
+                <thead class="bg-primary-subtle">
+                  <tr>
+                    <th data-field="id" data-visible="false">ID</th>
+                    <th data-field="date" data-sortable="true" data-sorter="dateSorter">Date</th>
+                    <th data-field="time" data-sortable="true">Time</th>
+                    <th data-field="timeMS" data-visible="false">ms</th>
+                    <th data-field="remove" data-formatter="removeFormatter" data-events="window.removeEvent"></th>
+                  </tr>
+                </thead>
+              </table>
+              <div class="d-flex justify-content-between mt-2">
+                <span class="text-muted"><span id="time-count">0</span> records</span>
+                <div id="toolbar"></div>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="chart-tab-pane" role="tabpanel" aria-labelledby="chart-tab" tabindex="0">
+              <div id="timesChart" style="width: 700px;height:300px;"></div>
+            </div>
           </div>
         </main>
         <footer class="container-fluid mt-auto text-muted bg-dark-subtle rounded-top py-2 px-4 d-flex justify-content-center align-items-center">
@@ -69,6 +82,7 @@
         <script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.10.21/tableExport.min.js"></script>
         <script src="https://unpkg.com/bootstrap-table@1.21.4/dist/bootstrap-table.min.js"></script>
         <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/export/bootstrap-table-export.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
         
         <script src="static/js/util.js"></script>
         <script src="static/js/script.js"></script>
