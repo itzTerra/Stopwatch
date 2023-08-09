@@ -17,34 +17,16 @@ const $historyTable = $("#history-table");
 const historyTableBody = document.querySelector("#history-table tbody");
 
 const timesChart = echarts.init(document.getElementById("timesChart"), "dark");
-timesChart.setOption({
-  title: {
-    text: "Progression Chart",
-  },
-  tooltip: {
-    trigger: "axis",
-  },
-  legend: {
-    data: ["legend"],
-  },
-  xAxis: {
-    type: "time",
-    name: "Date",
-  },
-  yAxis: {
-    type: "time",
-    name: "Time",
-  },
-  dataset: {
-    dimensions: ["date", "time"],
-    source: [],
-  },
-  //   series: [
-  //     {
-  //       type: "line",
-  //     },
-  //   ],
+$(window).on("resize", function () {
+  if (timesChart != null && timesChart != undefined) {
+    timesChart.resize();
+  }
 });
+
+// Options are in utils.js
+timesChart.setOption(timesChartOption);
+
+const chartData = [];
 
 var timeID = 0;
 
@@ -73,14 +55,59 @@ window.removeEvent = {
   },
 };
 
-$historyTable.bootstrapTable();
+$historyTable.bootstrapTable({
+  headerStyle: (column) => {
+    return {
+      classes: "fs-6",
+    };
+  },
+});
+
+var refreshTable = false;
+
+const tableTabBtn = document.querySelector(
+  "button[data-bs-target='#history-tab-pane']"
+);
+tableTabBtn?.addEventListener("shown.bs.tab", (e) => {
+  if (refreshTable) {
+    $historyTable.bootstrapTable("resetView");
+    refreshTable = false;
+  }
+});
+const chartTabBtn = document.querySelector(
+  "button[data-bs-target='#chart-tab-pane']"
+);
+chartTabBtn?.addEventListener("shown.bs.tab", (e) => {
+  if (timesChart != null && timesChart != undefined) {
+    timesChart.resize();
+    refreshTable = true;
+  }
+});
 
 // Get history of measured times from localStorage
 var timeHistorySaved = JSON.parse(localStorage.getItem("timeHistory"));
 if (timeHistorySaved !== null) {
   for (var rec of Object.values(timeHistorySaved)) {
-    appendHistoryRow(rec.date, rec.time, rec.ms);
+    if (typeof rec.date === "string") {
+      try {
+        const dateParts = rec.date.split("/");
+        const year = parseInt(dateParts[2]);
+        const month = parseInt(dateParts[1]) - 1; // Months in JavaScript are 0-indexed
+        const day = parseInt(dateParts[0]);
+        rec.date = new Date(year, month, day).getTime();
+      } catch {
+        continue;
+      }
+    }
+    appendHistoryRow(rec.date, rec.ms);
   }
+
+  // Update chart
+  timesChart.setOption({
+    dataset: {
+      source: chartData,
+    },
+  });
 }
 
 function startStop() {
@@ -136,55 +163,66 @@ function updateTimer() {
 }
 
 function save() {
-  var curDate = new Date().toLocaleDateString("en-gb");
-  var time = new Date(elapsedTime);
-  var minutes = time.getUTCMinutes().toString().padStart(2, "0");
-  var seconds = time.getUTCSeconds().toString().padStart(2, "0");
-  var milliseconds = Math.floor(time.getUTCMilliseconds() / 10)
-    .toString()
-    .padStart(2, "0");
-  time = `${minutes}:${seconds}:${milliseconds}`;
-
-  appendHistoryRow(curDate, time, elapsedTime);
+  appendHistoryRow(Date.now(), elapsedTime);
+  // Update chart
+  timesChart.setOption({
+    dataset: {
+      source: chartData,
+    },
+  });
   saveTimeHistory();
 }
 
-function saveTimeHistory() {
-  localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
-}
+function appendHistoryRow(date, timeMs) {
+  var dateStr = new Date(date).toLocaleDateString("en-gb");
+  var timeStr = msToTimeStr(timeMs);
 
-function appendHistoryRow(date, time, timeMs) {
   timeHistory[timeID] = {
     date: date,
-    time: time,
     ms: timeMs,
   };
-
-  var removeID = timeID++;
 
   $historyTable.bootstrapTable("insertRow", {
     index: 0,
     row: {
-      id: removeID,
-      date: date,
-      time: time,
+      id: timeID++,
+      date: dateStr,
+      time: timeStr,
       timeMS: timeMs,
       remove: "",
     },
   });
 
-  const dateParts = date.split("/");
-  const year = parseInt(dateParts[2]);
-  const month = parseInt(dateParts[1]) - 1; // Months in JavaScript are 0-indexed
-  const day = parseInt(dateParts[0]);
+  chartData.push([date, timeMs]);
 
-  const dateObject = new Date(year, month, day);
+  //   if (chartData.length == 0) {
+  //     chartData.push([date, timeMs]);
+  //   } else {
+  //     if (chartData.length == 1) {
+  //       chartData.push([date, timeMs]);
 
-  timesChart.setOption({
-    dataset: {
-      source: [dateObject, timeMs],
-    },
-  });
+  //       // Calculate trend coefficients
+  //       const coefficients = calculateLinearTrend(chartData);
+  //         // const coefficients = calculatePolynomialTrend(chartData);
+
+  //       chartData[0].push(evaluateLinear(coefficients, chartData[0][0]));
+  //       chartData[1].push(evaluateLinear(coefficients, chartData[1][0]));
+  //     } else {
+  //       const dataWithoutTrend = chartData.map((item) => {
+  //         return [item[0], item[1]];
+  //       });
+
+  //       // Calculate trend coefficients
+  //       const coefficients = calculateLinearTrend(dataWithoutTrend);
+  //         // const coefficients = calculatePolynomialTrend(dataWithoutTrend);
+  //       console.log(dataWithoutTrend, coefficients);
+
+  //       let trendValue = evaluateLinear(coefficients, date);
+  //         // let trendValue = evaluatePolynomial(coefficients, date);
+
+  //       chartData.push([date, timeMs, trendValue]);
+  //     }
+  //   }
 
   updateAvg(timeMs);
   updateTimeCount();
@@ -228,3 +266,7 @@ function removeFormatter(value, row, index) {
 // window.onbeforeunload += () => {
 //     localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
 // }
+
+function saveTimeHistory() {
+  localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
+}

@@ -29,7 +29,6 @@
               <button class="btn btn-lg btn-danger" onclick="reset()" id="resetbtn">Reset</button>
             </div>
           </div>
-          <hr>
           <div class="d-flex justify-content-between align-items-center">
             <ul class="nav nav-tabs" id="myTab" role="tablist">
               <li class="nav-item" role="presentation">
@@ -50,7 +49,7 @@
                 data-toolbar-align="right"
                 data-show-export="true"
                 data-unique-id="id"
-                data-height="340"
+                data-height="385"
                 data-sort-name="date" data-sort-order="desc">
                 <thead class="bg-primary-subtle">
                   <tr>
@@ -68,7 +67,7 @@
               </div>
             </div>
             <div class="tab-pane fade" id="chart-tab-pane" role="tabpanel" aria-labelledby="chart-tab" tabindex="0">
-              <div id="timesChart" style="width: 700px;height:300px;"></div>
+              <div id="timesChart" style="width: 100%;min-height:390px;"></div>
             </div>
           </div>
         </main>
@@ -83,8 +82,9 @@
         <script src="https://unpkg.com/bootstrap-table@1.21.4/dist/bootstrap-table.min.js"></script>
         <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/export/bootstrap-table-export.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/regression/2.0.1/regression.min.js" integrity="sha512-0k6FXllQktdobw8Nc8KQN2WtZrOuxpMn7jC2RKCF6LR7EdOhhrg3H5cBPxhs3CFzQVlO6ni1B9SDLUPhBs0Alg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         
-        <script src="static/js/util.js"></script>
+        <script src="static/js/utils.js"></script>
         <script src="static/js/script.js"></script>
         <script src="static/js/fileReader.js"></script>
     </body>

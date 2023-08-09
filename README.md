@@ -7,6 +7,7 @@ Static [website](itzterra.github.io/Stopwatch/) that implements basic stopwatch 
 - saves measured times in browser (localStorage)
 - calculates the average
 - can save time history to TXT, CSV etc.
+- shows chart
 
 ## To do
 - trend graph
@@ -16,3 +17,4 @@ Static [website](itzterra.github.io/Stopwatch/) that implements basic stopwatch 
 ## Made with:
 - [**Bootstrap5**](https://getbootstrap.com/) styling
 - [**Bootstrap Table**](https://bootstrap-table.com/) table features
+- [**Apache ECharts**](https://echarts.apache.org/en/index.html) chart

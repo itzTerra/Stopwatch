@@ -75,7 +75,7 @@ async function readFile(file) {
 
   if (entries != null) {
     for (let entry of entries) {
-      appendHistoryRow(entry.date, entry.time, entry.ms);
+      appendHistoryRow(entry.date, entry.ms);
     }
     saveTimeHistory();
   }
@@ -88,10 +88,19 @@ function readText(text) {
   for (let i = 2; i < lines.length; i++) {
     const [date, time] = lines[i].split(",");
     if (!date || !time) continue;
-    entries.push({ date: date, time: time, ms: getTimeMilliseconds(time) });
+    entries.push({ date: getDateTimestamp(date), ms: getTimeMilliseconds(time) });
   }
 
   return entries;
+}
+
+function getDateTimestamp(date) {
+  const dateParts = date.split("/");
+  const year = parseInt(dateParts[2]);
+  const month = parseInt(dateParts[1]) - 1; // Months in JavaScript are 0-indexed
+  const day = parseInt(dateParts[0]);
+
+  return (new Date(year, month, day)).getTime();
 }
 
 function getTimeMilliseconds(timeString) {
