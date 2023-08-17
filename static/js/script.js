@@ -1,6 +1,3 @@
-const removeButton =
-  '<button type="button" class="btn-close" aria-label="Close"></button>';
-
 const minLabel = document.getElementById("min");
 const minutesLabel = document.getElementById("minutes");
 const secLabel = document.getElementById("sec");
@@ -16,45 +13,23 @@ const timeCountLabel = document.getElementById("time-count");
 const $historyTable = $("#history-table");
 const historyTableBody = document.querySelector("#history-table tbody");
 
-const timesChart = echarts.init(document.getElementById("timesChart"), "dark");
-$(window).on("resize", function () {
-  if (timesChart != null && timesChart != undefined) {
-    timesChart.resize();
-  }
-});
+// HTML to render inside remove column of data table
+const removeButtonHTML =
+  '<button type="button" class="btn-close" aria-label="Close"></button>';
 
-// Options are in utils.js
-timesChart.setOption(timesChartOption);
+// Formatter to render the removeButton HTML inside remove column
+function removeFormatter(value, row, index) {
+  return removeButtonHTML;
+}
 
-const chartData = [];
-
-var timeID = 0;
-
-// Average time variables
-var timeCount = 0;
-var timeSum = 0;
-
-// Timer variables
-var startTime;
-var elapsedTime = 0;
-var timerInterval;
-var started = false;
-var shownMinutes = false;
-
-var timeHistory = {};
-
-window.removeEvent = {
+// Weird Bootstrap-Table cell event binding
+window.operateEvents = {
   "click .btn-close": (e, value, row, index) => {
-    var removeID = row.id;
-    delete timeHistory[removeID];
-    localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
-
-    $historyTable.bootstrapTable("removeByUniqueId", removeID);
-    updateAvg(-row.timeMS);
-    updateTimeCount();
+    removeHistoryRow(row.id);
   },
 };
 
+// Bootstrap table init
 $historyTable.bootstrapTable({
   headerStyle: (column) => {
     return {
@@ -63,8 +38,19 @@ $historyTable.bootstrapTable({
   },
 });
 
-var refreshTable = false;
+// Chart init
+const timesChart = echarts.init(document.getElementById("timesChart"), "dark");
+// Options are in utils.js
+timesChart.setOption(timesChartOption);
+// Make it reactive
+$(window).on("resize", function () {
+  if (timesChart != null && timesChart != undefined) {
+    timesChart.resize();
+  }
+});
 
+// Bootstrap event listeners to rerender table and chart when switching tabs (it bugged out)
+var refreshTable = false;
 const tableTabBtn = document.querySelector(
   "button[data-bs-target='#history-tab-pane']"
 );
@@ -84,8 +70,29 @@ chartTabBtn?.addEventListener("shown.bs.tab", (e) => {
   }
 });
 
+// window.onbeforeunload += () => {
+//     saveTimeHistory()
+// }
+
+// Global app var to internally index time records in history
+var timeID = 0;
+
+// Average time variables
+var timeCount = 0;
+var timeSum = 0;
+
+// Timer variables
+var startTime;
+var elapsedTime = 0;
+var timerInterval;
+var started = false;
+var shownMinutes = false;
+
+// In-memory database to store saved times
+var timeHistory = {};
+
 // Get history of measured times from localStorage
-var timeHistorySaved = JSON.parse(localStorage.getItem("timeHistory"));
+const timeHistorySaved = JSON.parse(localStorage.getItem("timeHistory"));
 if (timeHistorySaved !== null) {
   for (var rec of Object.values(timeHistorySaved)) {
     if (typeof rec.date === "string") {
@@ -102,14 +109,10 @@ if (timeHistorySaved !== null) {
     appendHistoryRow(rec.date, rec.ms);
   }
 
-  // Update chart
-  timesChart.setOption({
-    dataset: {
-      source: chartData,
-    },
-  });
+  updateChart();
 }
 
+// Tied to Start/Stop button
 function startStop() {
   if (!started) {
     // Start timer
@@ -126,6 +129,7 @@ function startStop() {
   started = !started;
 }
 
+// Tied to Reset button
 function reset() {
   clearInterval(timerInterval);
   elapsedTime = 0;
@@ -142,6 +146,14 @@ function reset() {
   saveButton.disabled = true;
 }
 
+// Tied to Save button
+function save() {
+  appendHistoryRow(Date.now(), elapsedTime);
+  updateChart();
+  saveTimeHistory();
+}
+
+// Interval function after Start is pressed
 function updateTimer() {
   var currentTime = Date.now();
   elapsedTime = currentTime - startTime;
@@ -160,17 +172,6 @@ function updateTimer() {
   minLabel.textContent = minutes > 0 ? minutes : "";
   secLabel.textContent = minutes > 0 ? seconds.padStart(2, "0") : seconds;
   msLabel.textContent = milliseconds;
-}
-
-function save() {
-  appendHistoryRow(Date.now(), elapsedTime);
-  // Update chart
-  timesChart.setOption({
-    dataset: {
-      source: chartData,
-    },
-  });
-  saveTimeHistory();
 }
 
 function appendHistoryRow(date, timeMs) {
@@ -193,7 +194,7 @@ function appendHistoryRow(date, timeMs) {
     },
   });
 
-  chartData.push([date, timeMs]);
+  // chartData.push([date, timeMs]);
 
   //   if (chartData.length == 0) {
   //     chartData.push([date, timeMs]);
@@ -228,6 +229,25 @@ function appendHistoryRow(date, timeMs) {
   updateTimeCount();
 }
 
+function removeHistoryRow(id) {
+  delete timeHistory[removeID];
+  saveTimeHistory();
+  $historyTable.bootstrapTable("removeByUniqueId", removeID);
+  updateChart();
+  updateAvg(-row.timeMS);
+  updateTimeCount();
+}
+
+function updateChart() {
+  timesChart.setOption({
+    dataset: {
+      source: Object.values(timeHistory).map((rec) => {
+        return [rec.date, rec.ms]
+      }),
+    },
+  });
+}
+
 function updateAvg(value) {
   timeSum += value;
   if (value > 0) {
@@ -258,14 +278,6 @@ function updateAvg(value) {
 function updateTimeCount() {
   timeCountLabel.textContent = timeCount;
 }
-
-function removeFormatter(value, row, index) {
-  return removeButton;
-}
-
-// window.onbeforeunload += () => {
-//     localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
-// }
 
 function saveTimeHistory() {
   localStorage.setItem("timeHistory", JSON.stringify(timeHistory));

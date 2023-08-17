@@ -1,3 +1,4 @@
+// Custom table sorter for date column
 function dateSorter(a, b) {
   const [dayA, monthA, yearA] = a.split("/");
   const [dayB, monthB, yearB] = b.split("/");
@@ -47,7 +48,7 @@ function calculateLinearTrendOld(data) {
 }
 
 function calculateLinearTrend(data) {
-  const result = regression.linear(data, {precision: 3});
+  const result = regression.linear(data, { precision: 3 });
   console.log(data, result);
   return result.equation;
 }
