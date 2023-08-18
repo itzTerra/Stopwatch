@@ -13,11 +13,8 @@
         <link href="static/css/style.css" rel="stylesheet" type="text/css">
     </head>
     <body>
-        <header>
-          <h1 class="display-4 text-center my-3">Stopwatch</h1>
-        </header>
-        <main class="container bg-dark rounded p-3 px-md-4 px-xl-5">
-          <div class="d-flex flex-column align-items-center justify-content-center">
+        <main class="container bg-body rounded p-3 px-md-4">
+          <div class="d-flex flex-column align-items-center justify-content-center my-2">
             <div class="bg-body-secondary px-5 rounded-5 text-white">
               <span id="minutes" class="me-4"><span id="min"></span><span class="unit">m</span></span>
               <span id="sec">0</span><span class="unit">s</span>
@@ -29,6 +26,42 @@
               <button class="btn btn-lg btn-danger" onclick="reset()" id="resetbtn">Reset</button>
             </div>
           </div>
+          <div class="my-3 d-flex column-gap-4 row-gap-2 flex-wrap flex-sm-nowrap">
+            <div class="input-group">
+              <span class="input-group-text">Current Set</span>
+              <select id="setSelect" class="form-select" onchange="changeSet(this.value)">
+                <option value="default" class="fst-italic">(default)</option>
+              </select>
+              <button data-bs-toggle="modal" data-bs-target="#confirmModal" id="deleteSetButton" class="btn btn-danger" title="Delete current set" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="4 4 16 16"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5" d="m8.464 15.535l7.072-7.07m-7.072 0l7.072 7.07"/></svg>              
+              </button>
+            </div>
+            <form onsubmit="return createSet()" class="input-group">
+                <span class="input-group-text">New Set</span>
+                <input id="setNameInput" type="text" class="form-control bg-dark-subtle" placeholder="name..." required>
+                <button class="btn btn-secondary" type="submit" title="Add">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19 11h-6V5a1 1 0 0 0-2 0v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2Z"/></svg>
+                </button>
+            </form>
+          </div>
+          <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title fs-5">Delete set</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  Are you sure you want to delete current set? Its time history will be lost.
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button onclick="deleteCurSet()" type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="d-flex justify-content-between align-items-center">
             <ul class="nav nav-tabs" id="myTab" role="tablist">
               <li class="nav-item" role="presentation">
@@ -54,15 +87,14 @@
                 <thead class="bg-primary-subtle">
                   <tr>
                     <th data-field="id" data-visible="false">ID</th>
-                    <th data-field="date" data-sortable="true" data-sorter="dateSorter">Date</th>
+                    <th data-field="date" data-sortable="true" data-formatter="dateFormatter">Date</th>
                     <th data-field="time" data-sortable="true">Time</th>
-                    <th data-field="timeMS" data-visible="false">ms</th>
                     <th data-field="remove" data-formatter="removeFormatter" data-events="window.operateEvents"></th>
                   </tr>
                 </thead>
               </table>
               <div class="d-flex justify-content-between mt-2">
-                <span class="text-muted"><span id="time-count">0</span> records</span>
+                <span class="text-muted" id="time-count">0 records</span>
                 <div id="toolbar"></div>
               </div>
             </div>
@@ -72,7 +104,7 @@
           </div>
         </main>
         <footer class="container-fluid mt-auto text-muted bg-dark-subtle rounded-top py-2 px-4 d-flex justify-content-center align-items-center">
-          <span>© Terra</span>
+          <span>Stopwatch © Terra</span>
           <a class="nav-link mx-2" href="https://github.com/itzTerra" target="_blank"><i class="bi bi-github"></i></a>
         </footer>
 
@@ -83,7 +115,7 @@
         <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/export/bootstrap-table-export.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/regression/2.0.1/regression.min.js" integrity="sha512-0k6FXllQktdobw8Nc8KQN2WtZrOuxpMn7jC2RKCF6LR7EdOhhrg3H5cBPxhs3CFzQVlO6ni1B9SDLUPhBs0Alg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        
+
         <script src="static/js/utils.js"></script>
         <script src="static/js/script.js"></script>
         <script src="static/js/fileReader.js"></script>

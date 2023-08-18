@@ -1,12 +1,5 @@
-// Custom table sorter for date column
-function dateSorter(a, b) {
-  const [dayA, monthA, yearA] = a.split("/");
-  const [dayB, monthB, yearB] = b.split("/");
-
-  const dateA = new Date(`${monthA}/${dayA}/${yearA}`);
-  const dateB = new Date(`${monthB}/${dayB}/${yearB}`);
-
-  return dateA - dateB;
+function dateFormatter(date){
+    return new Date(date).toLocaleDateString("en-gb")
 }
 
 function msToTimeStr(timeMs, padMinutes = true) {
@@ -19,6 +12,17 @@ function msToTimeStr(timeMs, padMinutes = true) {
   var milliseconds = Math.floor(time.getUTCMilliseconds() / 10)
     .toString()
     .padStart(2, "0");
+
+//   let minutes = Math.floor(average / 60 / 1000)
+//     .toString()
+//     .padStart(2, "0");
+//   let seconds = Math.floor((average % (60 * 1000)) / 1000)
+//     .toString()
+//     .padStart(2, "0");
+//   let milliseconds = Math.floor((average % 1000) / 10)
+//     .toString()
+//     .padStart(2, "0");
+
   return `${minutes}:${seconds}:${milliseconds}`;
 }
 
@@ -28,7 +32,7 @@ function timeStrToMs(timeString) {
   const seconds = parseInt(timeParts[1]);
   const milliseconds = parseInt(timeParts[2]);
 
-  const totalMilliseconds = minutes * 60 * 1000 + seconds * 1000 + milliseconds;
+  const totalMilliseconds = minutes * 60 * 1000 + seconds * 1000 + milliseconds * 10;
   return totalMilliseconds;
 }
 
@@ -38,7 +42,44 @@ function dateStrToMs(timeString) {
   const month = parseInt(dateParts[1]) - 1; // Months in JavaScript are 0-indexed
   const day = parseInt(dateParts[0]);
 
-  return (new Date(year, month, day)).getTime();
+  return new Date(year, month, day).getTime();
+}
+
+function isSetNameValid(setName) {
+  // Use a regular expression to match valid characters
+  const regex = /^[a-zA-Z0-9_]+$/;
+
+  // Test the input against the regular expression
+  return regex.test(setName);
+}
+
+function appendOption(select, value, text = null, selected = false) {
+  if (text === null) {
+    text = value;
+  }
+  const newOption = document.createElement("option");
+  newOption.value = value;
+  newOption.textContent = text;
+  newOption.selected = selected;
+  select.appendChild(newOption);
+}
+
+function removeOption(select, value) {
+  const optionToRemove = select.querySelector(`option[value="${value}"]`);
+  if (optionToRemove) {
+    optionToRemove.remove();
+  } else {
+    console.error(`Option with value ${valueToRemove} not found.`);
+  }
+}
+
+function selectOption(select, value) {
+  const optionToSelect = select.querySelector(`option[value="${value}"]`);
+  if (optionToSelect) {
+    optionToSelect.selected = true;
+  } else {
+    console.error(`Option with value ${valueToRemove} not found.`);
+  }
 }
 
 function calculateLinearTrendOld(data) {
@@ -96,7 +137,7 @@ function evaluatePolynomial(coefficients, x) {
 const timesChartOption = {
   grid: {
     top: 40,
-    left: 15,
+    left: 25,
     right: 50,
     bottom: 50,
     containLabel: true,

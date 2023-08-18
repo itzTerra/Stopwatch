@@ -1,3 +1,5 @@
+// #################################### HTML EL. REFERENCES #############################
+
 const minLabel = document.getElementById("min");
 const minutesLabel = document.getElementById("minutes");
 const secLabel = document.getElementById("sec");
@@ -7,11 +9,40 @@ const toggleButton = document.getElementById("startbtn");
 const saveButton = document.getElementById("savebtn");
 const resetButton = document.getElementById("resetbtn");
 
+const setNameInput = document.getElementById("setNameInput");
+const setSelect = document.getElementById("setSelect");
+const deleteSetButton = document.getElementById("deleteSetButton");
+
 const avgTimeLabel = document.getElementById("avg-time");
 const timeCountLabel = document.getElementById("time-count");
 
 const $historyTable = $("#history-table");
 const historyTableBody = document.querySelector("#history-table tbody");
+
+//  ################################## VARIABLES ####################################
+
+const DEFAULT_SET_NAME = "default";
+
+// Global app var to internally index time records in history
+var timeID = 0;
+
+// Key for timeHistory (to save to and read data for table and chart)
+var currentSet = DEFAULT_SET_NAME;
+
+// Timer variables
+var startTime;
+var elapsedTime = 0;
+var timerInterval;
+var started = false;
+var shownMinutes = false;
+
+// In-memory database to store saved times
+var timeHistory = new Map();
+timeHistory.set("default", {});
+
+// ######################################## INIT ###########################################
+
+// ##################### Bootstrap-Table ######################
 
 // HTML to render inside remove column of data table
 const removeButtonHTML =
@@ -29,14 +60,27 @@ window.operateEvents = {
   },
 };
 
-// Bootstrap table init
+// Table init with additional options (others in template)
 $historyTable.bootstrapTable({
   headerStyle: (column) => {
     return {
       classes: "fs-6",
     };
   },
+  exportOptions: {
+    fileName: () => {
+      const now = new Date();
+      const month = now.getMonth().toString().padStart(2, "0");
+      const day = now.getDate().toString().padStart(2, "0");
+      const hours = now.getHours().toString().padStart(2, "0");
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      const shortDate = `${now.getFullYear()}${month}${day}_${hours}${minutes}`;
+      return `${currentSet}_${shortDate}`;
+    },
+  },
 });
+
+// ################### ECharts ####################
 
 // Chart init
 const timesChart = echarts.init(document.getElementById("timesChart"), "dark");
@@ -49,7 +93,9 @@ $(window).on("resize", function () {
   }
 });
 
-// Bootstrap event listeners to rerender table and chart when switching tabs (it bugged out)
+// ################## OTHER ###################
+
+// Bootstrap event listeners to rerender table and chart when switching tabs (it bugged)
 var refreshTable = false;
 const tableTabBtn = document.querySelector(
   "button[data-bs-target='#history-tab-pane']"
@@ -74,42 +120,47 @@ chartTabBtn?.addEventListener("shown.bs.tab", (e) => {
 //     saveTimeHistory()
 // }
 
-// Global app var to internally index time records in history
-var timeID = 0;
+initFromLocalStorage();
 
-// Average time variables
-var timeCount = 0;
-var timeSum = 0;
-
-// Timer variables
-var startTime;
-var elapsedTime = 0;
-var timerInterval;
-var started = false;
-var shownMinutes = false;
-
-// In-memory database to store saved times
-var timeHistory = {};
+// ######################################## FUNCTIONS ######################################
 
 // Get history of measured times from localStorage
-const timeHistorySaved = JSON.parse(localStorage.getItem("timeHistory"));
-if (timeHistorySaved !== null) {
-  for (var rec of Object.values(timeHistorySaved)) {
-    if (typeof rec.date === "string") {
-      try {
-        const dateParts = rec.date.split("/");
-        const year = parseInt(dateParts[2]);
-        const month = parseInt(dateParts[1]) - 1; // Months in JavaScript are 0-indexed
-        const day = parseInt(dateParts[0]);
-        rec.date = new Date(year, month, day).getTime();
-      } catch {
-        continue;
+function initFromLocalStorage() {
+  const timeHistorySaved = JSON.parse(localStorage.getItem("timeHistory"));
+  // Backwards compatibility for older format
+  if (timeHistorySaved) {
+    for (var record of Object.values(timeHistorySaved)) {
+      // Even older format
+      if (typeof record.date === "string") {
+        try {
+          record.date = dateStrToMs(record.date);
+        } catch {
+          continue;
+        }
       }
+      appendHistoryRow(record.date, record.ms);
     }
-    appendHistoryRow(rec.date, rec.ms);
+    updateChart();
+  } else {
+    const timeHistorySaved = new Map(JSON.parse(localStorage.getItem("times")));
+
+    console.log(timeHistorySaved);
+    if (timeHistorySaved)
+      for (const [setName, times] of timeHistorySaved.entries()) {
+        if (!timeHistory.has(setName)) {
+          appendOption(setSelect, setName);
+          timeHistory.set(setName, {});
+        }
+        changeSet(setName, false);
+
+        for (record of Object.values(times)) {
+          appendHistoryRow(record.date, record.ms, false);
+        }
+      }
   }
 
-  updateChart();
+  // Set current set to last used by user
+  changeSet(localStorage.getItem("currentSet"), false);
 }
 
 // Tied to Start/Stop button
@@ -146,10 +197,12 @@ function reset() {
   saveButton.disabled = true;
 }
 
-// Tied to Save button
+// Bound to Save button
 function save() {
   appendHistoryRow(Date.now(), elapsedTime);
   updateChart();
+  updateAvg();
+  updateTimeCount();
   saveTimeHistory();
 }
 
@@ -174,26 +227,98 @@ function updateTimer() {
   msLabel.textContent = milliseconds;
 }
 
-function appendHistoryRow(date, timeMs) {
-  var dateStr = new Date(date).toLocaleDateString("en-gb");
-  var timeStr = msToTimeStr(timeMs);
+// Removes time from current history using button in datatable
+function removeHistoryRow(id) {
+  delete getCurTimeHistory()[id];
+  $historyTable.bootstrapTable("removeByUniqueId", id);
+  updateChart();
+  updateAvg();
+  updateTimeCount();
+  saveTimeHistory();
+}
 
-  timeHistory[timeID] = {
-    date: date,
-    ms: timeMs,
-  };
+// ################## SET MANIPULATION #################
 
-  $historyTable.bootstrapTable("insertRow", {
-    index: 0,
-    row: {
-      id: timeID++,
-      date: dateStr,
-      time: timeStr,
-      timeMS: timeMs,
+// Bound to form onsubmit
+function createSet() {
+  const setName = setNameInput.value;
+  setNameInput.value = "";
+  if (!isSetNameValid(setName) || timeHistory.has(setName)) {
+    alert(
+      "Set name must be unique and only contain alphanumeric characters and underscores."
+    );
+    return false;
+  }
+
+  timeHistory.set(setName, {});
+  saveTimeHistory();
+
+  appendOption(setSelect, setName);
+
+  changeSet(setName);
+
+  return false;
+}
+
+// Bound to select
+function changeSet(setName = DEFAULT_SET_NAME, saveToLocalStorage = true) {
+  if (setName === null) {
+    setName = DEFAULT_SET_NAME;
+  }
+
+  if (!timeHistory.has(setName)) {
+    alert(`Error! Set '${setName}' does not exist.`);
+    return;
+  }
+
+  currentSet = setName;
+  if (saveToLocalStorage) {
+    localStorage.setItem("currentSet", currentSet);
+  }
+
+  selectOption(setSelect, setName);
+
+  if (setName === DEFAULT_SET_NAME) {
+    deleteSetButton.disabled = true;
+  } else {
+    deleteSetButton.disabled = false;
+  }
+
+  updateTable();
+  updateChart();
+  updateAvg();
+  updateTimeCount();
+}
+
+// Called after confirmation in modal
+function deleteCurSet() {
+  timeHistory.delete(currentSet);
+  saveTimeHistory();
+
+  removeOption(setSelect, currentSet);
+
+  const lastSet = [...timeHistory.keys()].pop();
+  changeSet(lastSet);
+}
+
+// ###################### TEMPLATE UPDATES ########################
+
+function updateTable() {
+  const rows = [];
+
+  for ([id, record] of Object.entries(getCurTimeHistory())) {
+    rows.push({
+      id: id,
+      date: record.date,
+      time: msToTimeStr(record.ms),
       remove: "",
-    },
-  });
+    });
+  }
 
+  $historyTable.bootstrapTable("load", rows);
+}
+
+function updateChart() {
   // chartData.push([date, timeMs]);
 
   //   if (chartData.length == 0) {
@@ -225,60 +350,72 @@ function appendHistoryRow(date, timeMs) {
   //     }
   //   }
 
-  updateAvg(timeMs);
-  updateTimeCount();
-}
-
-function removeHistoryRow(id) {
-  delete timeHistory[removeID];
-  saveTimeHistory();
-  $historyTable.bootstrapTable("removeByUniqueId", removeID);
-  updateChart();
-  updateAvg(-row.timeMS);
-  updateTimeCount();
-}
-
-function updateChart() {
   timesChart.setOption({
     dataset: {
-      source: Object.values(timeHistory).map((rec) => {
-        return [rec.date, rec.ms]
+      source: Object.values(getCurTimeHistory()).map((rec) => {
+        return [rec.date, rec.ms];
       }),
     },
   });
 }
 
-function updateAvg(value) {
-  timeSum += value;
-  if (value > 0) {
-    timeCount++;
-  } else if (value < 0) {
-    timeCount--;
-  }
+function updateAvg() {
+  const times = Object.values(getCurTimeHistory());
+  const timeCount = times.length;
+  const timeSum = times.reduce((sum, current) => sum + current.ms, 0);
 
   if (timeCount == 0) {
     avgTimeLabel.textContent = "0";
     return;
   }
-  let average = timeSum / timeCount;
 
-  let minutes = Math.floor(average / 60 / 1000)
-    .toString()
-    .padStart(2, "0");
-  let seconds = Math.floor((average % (60 * 1000)) / 1000)
-    .toString()
-    .padStart(2, "0");
-  let milliseconds = Math.floor((average % 1000) / 10)
-    .toString()
-    .padStart(2, "0");
-
-  avgTimeLabel.textContent = minutes + ":" + seconds + ":" + milliseconds;
+  const average = timeSum / timeCount;
+  avgTimeLabel.textContent = msToTimeStr(average, false);
 }
 
 function updateTimeCount() {
-  timeCountLabel.textContent = timeCount;
+  const count = Object.keys(getCurTimeHistory()).length;
+
+  if (count == 1) {
+    timeCountLabel.textContent = "1 record";
+  } else {
+    timeCountLabel.textContent = `${count} records`;
+  }
 }
 
+// ################## UTILS IN CONTEXT ################
+
+// Function that needs to be used to add new time entries to maintain unique timeID
+function appendHistoryRow(date, timeMs, insertToTable = true) {
+  getCurTimeHistory()[timeID] = {
+    date: date,
+    ms: timeMs,
+  };
+
+  if (insertToTable) {
+    $historyTable.bootstrapTable("insertRow", {
+      index: 0,
+      row: {
+        id: timeID,
+        date: date,
+        time: msToTimeStr(timeMs),
+        remove: "",
+      },
+    });
+  }
+
+  timeID++;
+}
+
+// Serializes timeHistory to localStorage
 function saveTimeHistory() {
-  localStorage.setItem("timeHistory", JSON.stringify(timeHistory));
+  localStorage.setItem(
+    "times",
+    JSON.stringify(Array.from(timeHistory.entries()))
+  );
+}
+
+// Returns Object in form {timeID: {date: number, ms:number}} of current set
+function getCurTimeHistory() {
+  return timeHistory.get(currentSet);
 }

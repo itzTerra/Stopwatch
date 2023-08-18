@@ -75,8 +75,12 @@ async function readFile(file) {
 
   if (entries != null) {
     for (let entry of entries) {
-      appendHistoryRow(entry.date, entry.ms);
+      appendHistoryRow(entry.date, entry.ms, false);
     }
+    updateTable();
+    updateChart();
+    updateAvg();
+    updateTimeCount();
     saveTimeHistory();
   }
 }
@@ -85,7 +89,7 @@ function readText(text) {
   let entries = [];
 
   const lines = text.split("\n");
-  for (let i = 2; i < lines.length; i++) {
+  for (let i = 1; i < lines.length; i++) {
     const [date, time] = lines[i].split(",");
     if (!date || !time) continue;
     entries.push({ date: dateStrToMs(date), ms: timeStrToMs(time) });
