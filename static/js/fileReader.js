@@ -56,7 +56,7 @@ dropZone.addEventListener("drop", async (e) => {
     // This is where we can actually exclusively act on the files.
     if (handle.kind === "file" || handle.isFile) {
       let file = handle;
-      //   console.log(`File: ${file.name}`);
+      // console.log(`File: ${file.name}`);
       if (file instanceof FileSystemFileHandle) {
         file = await handle.getFile();
       }
@@ -88,27 +88,8 @@ function readText(text) {
   for (let i = 2; i < lines.length; i++) {
     const [date, time] = lines[i].split(",");
     if (!date || !time) continue;
-    entries.push({ date: getDateTimestamp(date), ms: getTimeMilliseconds(time) });
+    entries.push({ date: dateStrToMs(date), ms: timeStrToMs(time) });
   }
 
   return entries;
-}
-
-function getDateTimestamp(date) {
-  const dateParts = date.split("/");
-  const year = parseInt(dateParts[2]);
-  const month = parseInt(dateParts[1]) - 1; // Months in JavaScript are 0-indexed
-  const day = parseInt(dateParts[0]);
-
-  return (new Date(year, month, day)).getTime();
-}
-
-function getTimeMilliseconds(timeString) {
-  const timeParts = timeString.split(":");
-  const minutes = parseInt(timeParts[0]);
-  const seconds = parseInt(timeParts[1]);
-  const milliseconds = parseInt(timeParts[2]);
-
-  const totalMilliseconds = minutes * 60 * 1000 + seconds * 1000 + milliseconds;
-  return totalMilliseconds;
 }

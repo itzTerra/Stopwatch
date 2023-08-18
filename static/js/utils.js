@@ -10,7 +10,7 @@ function dateSorter(a, b) {
 }
 
 function msToTimeStr(timeMs, padMinutes = true) {
-  var time = new Date(timeMs);
+  const time = new Date(timeMs);
   var minutes = time.getUTCMinutes().toString();
   if (padMinutes) {
     minutes = minutes.padStart(2, "0");
@@ -20,6 +20,25 @@ function msToTimeStr(timeMs, padMinutes = true) {
     .toString()
     .padStart(2, "0");
   return `${minutes}:${seconds}:${milliseconds}`;
+}
+
+function timeStrToMs(timeString) {
+  const timeParts = timeString.split(":");
+  const minutes = parseInt(timeParts[0]);
+  const seconds = parseInt(timeParts[1]);
+  const milliseconds = parseInt(timeParts[2]);
+
+  const totalMilliseconds = minutes * 60 * 1000 + seconds * 1000 + milliseconds;
+  return totalMilliseconds;
+}
+
+function dateStrToMs(timeString) {
+  const dateParts = timeString.split("/");
+  const year = parseInt(dateParts[2]);
+  const month = parseInt(dateParts[1]) - 1; // Months in JavaScript are 0-indexed
+  const day = parseInt(dateParts[0]);
+
+  return (new Date(year, month, day)).getTime();
 }
 
 function calculateLinearTrendOld(data) {
