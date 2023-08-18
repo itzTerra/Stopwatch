@@ -8,6 +8,7 @@ Static [website](itzterra.github.io/Stopwatch/) that implements basic stopwatch 
 - calculates the average
 - can save time history to TXT, CSV etc.
 - shows chart
+- can store multiple sets of time measures
 
 ## To do
 - trend graph
