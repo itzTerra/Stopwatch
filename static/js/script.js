@@ -14,6 +14,15 @@ const setSelect = document.getElementById("setSelect");
 const deleteSetButton = document.getElementById("deleteSetButton");
 
 const avgTimeLabel = document.getElementById("avg-time");
+const avgTimeLabels = {
+  session: document.getElementById("avgSession"),
+  day: document.getElementById("avgDay"),
+  week: document.getElementById("avgWeek"),
+  month: document.getElementById("avgMonth"),
+  year: document.getElementById("avgYear"),
+  allTime: document.getElementById("avgAllTime"),
+};
+
 const timeCountLabel = document.getElementById("time-count");
 
 const $historyTable = $("#history-table");
@@ -37,7 +46,7 @@ var started = false;
 var shownMinutes = false;
 
 // In-memory database to store saved times
-var timeHistory = new Map();
+const timeHistory = new Map();
 timeHistory.set("default", {});
 
 // ######################################## INIT ###########################################
@@ -144,7 +153,6 @@ function initFromLocalStorage() {
   } else {
     const timeHistorySaved = new Map(JSON.parse(localStorage.getItem("times")));
 
-    console.log(timeHistorySaved);
     if (timeHistorySaved)
       for (const [setName, times] of timeHistorySaved.entries()) {
         if (!timeHistory.has(setName)) {
@@ -180,32 +188,6 @@ function startStop() {
   started = !started;
 }
 
-// Tied to Reset button
-function reset() {
-  clearInterval(timerInterval);
-  elapsedTime = 0;
-  started = false;
-
-  minutesLabel.style.display = "none";
-  shownMinutes = false;
-
-  minLabel.textContent = "";
-  secLabel.textContent = 0;
-  msLabel.textContent = "00";
-
-  toggleButton.textContent = "Start";
-  saveButton.disabled = true;
-}
-
-// Bound to Save button
-function save() {
-  appendHistoryRow(Date.now(), elapsedTime);
-  updateChart();
-  updateAvg();
-  updateTimeCount();
-  saveTimeHistory();
-}
-
 // Interval function after Start is pressed
 function updateTimer() {
   var currentTime = Date.now();
@@ -225,6 +207,34 @@ function updateTimer() {
   minLabel.textContent = minutes > 0 ? minutes : "";
   secLabel.textContent = minutes > 0 ? seconds.padStart(2, "0") : seconds;
   msLabel.textContent = milliseconds;
+}
+
+// Tied to Reset button
+function reset() {
+  clearInterval(timerInterval);
+  elapsedTime = 0;
+  started = false;
+
+  minutesLabel.style.display = "none";
+  shownMinutes = false;
+
+  minLabel.textContent = "";
+  secLabel.textContent = 0;
+  msLabel.textContent = "00";
+
+  toggleButton.textContent = "Start";
+  saveButton.disabled = true;
+}
+
+// Bound to Save button
+function save() {
+  const date = Date.now();
+
+  appendHistoryRow(date, elapsedTime, true, true);
+  updateChart();
+  updateAvg();
+  updateTimeCount();
+  saveTimeHistory();
 }
 
 // Removes time from current history using button in datatable
@@ -310,7 +320,7 @@ function updateTable() {
     rows.push({
       id: id,
       date: record.date,
-      time: msToTimeStr(record.ms),
+      time: record.ms,
       remove: "",
     });
   }
@@ -359,18 +369,43 @@ function updateChart() {
   });
 }
 
+function formatAvg(avg) {
+  return isNaN(avg) ? "⁠—" : msToTimeStr(avg, true);
+}
+
 function updateAvg() {
   const times = Object.values(getCurTimeHistory());
-  const timeCount = times.length;
-  const timeSum = times.reduce((sum, current) => sum + current.ms, 0);
 
-  if (timeCount == 0) {
-    avgTimeLabel.textContent = "0";
-    return;
-  }
+  const now = Date.now();
 
-  const average = timeSum / timeCount;
-  avgTimeLabel.textContent = msToTimeStr(average, false);
+  const timesSession = times.filter((item) => item.session || false);
+  const sessionCount = timesSession.length;
+  const sessionSum = sumTimes(timesSession);
+  avgTimeLabels.session.innerText = formatAvg(sessionSum / sessionCount);
+
+  const timesDay = times.filter((item) => item.date >= now - MS_DAY);
+  const dayCount = timesDay.length;
+  const daySum = sumTimes(timesDay);
+  avgTimeLabels.day.innerText = formatAvg(daySum / dayCount);
+
+  const timesWeek = times.filter((item) => item.date >= now - MS_WEEK);
+  const weekCount = timesWeek.length;
+  const weekSum = sumTimes(timesWeek);
+  avgTimeLabels.week.innerText = formatAvg(weekSum / weekCount);
+
+  const timesMonth = times.filter((item) => item.date >= now - MS_MONTH);
+  const monthCount = timesMonth.length;
+  const monthSum = sumTimes(timesMonth);
+  avgTimeLabels.month.innerText = formatAvg(monthSum / monthCount);
+
+  const timesYear = times.filter((item) => item.date >= now - MS_YEAR);
+  const yearCount = timesYear.length;
+  const yearSum = sumTimes(timesYear);
+  avgTimeLabels.year.innerText = formatAvg(yearSum / yearCount);
+
+  const allTimeCount = times.length;
+  const allTimeSum = sumTimes(times);
+  avgTimeLabels.allTime.innerText = formatAvg(allTimeSum / allTimeCount);
 }
 
 function updateTimeCount() {
@@ -386,11 +421,21 @@ function updateTimeCount() {
 // ################## UTILS IN CONTEXT ################
 
 // Function that needs to be used to add new time entries to maintain unique timeID
-function appendHistoryRow(date, timeMs, insertToTable = true) {
-  getCurTimeHistory()[timeID] = {
+function appendHistoryRow(
+  date,
+  timeMs,
+  insertToTable = true,
+  markSession = false
+) {
+  const curHistory = getCurTimeHistory();
+  curHistory[timeID] = {
     date: date,
     ms: timeMs,
   };
+
+  if (markSession){
+    curHistory[timeID].session = true
+  }
 
   if (insertToTable) {
     $historyTable.bootstrapTable("insertRow", {
@@ -398,7 +443,7 @@ function appendHistoryRow(date, timeMs, insertToTable = true) {
       row: {
         id: timeID,
         date: date,
-        time: msToTimeStr(timeMs),
+        time: timeMs,
         remove: "",
       },
     });

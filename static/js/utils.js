@@ -1,27 +1,36 @@
-function dateFormatter(date){
-    return new Date(date).toLocaleDateString("en-gb")
+const MS_DAY = 24 * 3600 * 1000;
+const MS_WEEK = 7 * MS_DAY;
+const MS_MONTH = 30 * MS_DAY;
+const MS_YEAR = 365 * MS_DAY;
+
+function dateFormatter(dateMs) {
+  return msToDateStr(dateMs);
 }
 
-function msToTimeStr(timeMs, padMinutes = true) {
+function timeFormatter(timeMs){
+    return msToTimeStr(timeMs, true)
+}
+
+function msToTimeStr(timeMs, padMinutes = false) {
   const time = new Date(timeMs);
-  var minutes = time.getUTCMinutes().toString();
+  let minutes = time.getUTCMinutes().toString();
   if (padMinutes) {
     minutes = minutes.padStart(2, "0");
   }
-  var seconds = time.getUTCSeconds().toString().padStart(2, "0");
-  var milliseconds = Math.floor(time.getUTCMilliseconds() / 10)
+  let seconds = time.getUTCSeconds().toString().padStart(2, "0");
+  let milliseconds = Math.floor(time.getUTCMilliseconds() / 10)
     .toString()
     .padStart(2, "0");
 
-//   let minutes = Math.floor(average / 60 / 1000)
-//     .toString()
-//     .padStart(2, "0");
-//   let seconds = Math.floor((average % (60 * 1000)) / 1000)
-//     .toString()
-//     .padStart(2, "0");
-//   let milliseconds = Math.floor((average % 1000) / 10)
-//     .toString()
-//     .padStart(2, "0");
+  //   let minutes = Math.floor(average / 60 / 1000)
+  //     .toString()
+  //     .padStart(2, "0");
+  //   let seconds = Math.floor((average % (60 * 1000)) / 1000)
+  //     .toString()
+  //     .padStart(2, "0");
+  //   let milliseconds = Math.floor((average % 1000) / 10)
+  //     .toString()
+  //     .padStart(2, "0");
 
   return `${minutes}:${seconds}:${milliseconds}`;
 }
@@ -32,8 +41,17 @@ function timeStrToMs(timeString) {
   const seconds = parseInt(timeParts[1]);
   const milliseconds = parseInt(timeParts[2]);
 
-  const totalMilliseconds = minutes * 60 * 1000 + seconds * 1000 + milliseconds * 10;
+  const totalMilliseconds =
+    minutes * 60 * 1000 + seconds * 1000 + milliseconds * 10;
   return totalMilliseconds;
+}
+
+function msToDateStr(dateMs){
+    const date = new Date(dateMs)
+    let days = date.getDate().toString().padStart(2, "0")
+    let month = (date.getMonth()+1).toString().padStart(2, "0")
+    let year = date.getFullYear()
+    return `${days}/${month}/${year}`
 }
 
 function dateStrToMs(timeString) {
@@ -43,6 +61,10 @@ function dateStrToMs(timeString) {
   const day = parseInt(dateParts[0]);
 
   return new Date(year, month, day).getTime();
+}
+
+function sumTimes(times){
+    return times.reduce((sum, cur) => sum + cur.ms, 0)
 }
 
 function isSetNameValid(setName) {

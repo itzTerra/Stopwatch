@@ -39,74 +39,109 @@
             <form onsubmit="return createSet()" class="input-group">
                 <span class="input-group-text">New Set</span>
                 <input id="setNameInput" type="text" class="form-control bg-dark-subtle" placeholder="name..." required>
-                <button class="btn btn-secondary" type="submit" title="Add">
+                <button class="btn btn-success" type="submit" title="Add">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19 11h-6V5a1 1 0 0 0-2 0v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2Z"/></svg>
                 </button>
             </form>
           </div>
-          <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h1 class="modal-title fs-5">Delete set</h1>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  Are you sure you want to delete current set? Its time history will be lost.
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button onclick="deleteCurSet()" type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>
+          <div class="avg-container">
+            <div class="d-flex justify-content-between align-items-center">
+              <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-tab-pane" type="button" role="tab" aria-controls="history-tab-pane" aria-selected="true">History</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="chart-tab" data-bs-toggle="tab" data-bs-target="#chart-tab-pane" type="button" role="tab" aria-controls="chart-tab-pane" aria-selected="false">Chart</button>
+                </li>
+              </ul>
+              <!-- Here could be a button to make an offcanvas with avg-table appear on mobile -->
+            </div>
+            <div class="tab-content">
+              <div class="tab-pane fade show active" id="history-tab-pane" role="tabpanel" aria-labelledby="history-tab" tabindex="0">
+                <table 
+                  class="table bg-body-tertiary table-striped fs-5" 
+                  id="history-table"
+                  data-buttons-toolbar="#toolbar"
+                  data-toolbar-align="right"
+                  data-show-export="true"
+                  data-unique-id="id"
+                  data-height="385"
+                  data-sort-name="date" data-sort-order="desc">
+                  <thead class="bg-primary-subtle">
+                    <tr>
+                      <th data-field="id" data-visible="false">ID</th>
+                      <th data-field="date" data-sortable="true" data-formatter="dateFormatter">Date <small class="fw-normal">(dd/mm/yyyy)</small></th>
+                      <th data-field="time" data-sortable="true" data-formatter="timeFormatter">Time</th>
+                      <th data-field="remove" data-formatter="removeFormatter" data-events="window.operateEvents"></th>
+                    </tr>
+                  </thead>
+                </table>
+                <div class="d-flex justify-content-between mt-2">
+                  <span class="text-muted" id="time-count">0 records</span>
+                  <div id="toolbar"></div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center">
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-              <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-tab-pane" type="button" role="tab" aria-controls="history-tab-pane" aria-selected="true">History</button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="chart-tab" data-bs-toggle="tab" data-bs-target="#chart-tab-pane" type="button" role="tab" aria-controls="chart-tab-pane" aria-selected="false">Chart</button>
-              </li>
-            </ul>
-            <span class="lead">Average: <strong id="avg-time">0</strong></span>
-          </div>
-          <div class="tab-content">
-            <div class="tab-pane fade show active" id="history-tab-pane" role="tabpanel" aria-labelledby="history-tab" tabindex="0">
-              <table 
-                class="table bg-body-tertiary table-striped fs-5" 
-                id="history-table"
-                data-buttons-toolbar="#toolbar"
-                data-toolbar-align="right"
-                data-show-export="true"
-                data-unique-id="id"
-                data-height="385"
-                data-sort-name="date" data-sort-order="desc">
-                <thead class="bg-primary-subtle">
-                  <tr>
-                    <th data-field="id" data-visible="false">ID</th>
-                    <th data-field="date" data-sortable="true" data-formatter="dateFormatter">Date</th>
-                    <th data-field="time" data-sortable="true">Time</th>
-                    <th data-field="remove" data-formatter="removeFormatter" data-events="window.operateEvents"></th>
-                  </tr>
-                </thead>
-              </table>
-              <div class="d-flex justify-content-between mt-2">
-                <span class="text-muted" id="time-count">0 records</span>
-                <div id="toolbar"></div>
+              <div class="tab-pane fade" id="chart-tab-pane" role="tabpanel" aria-labelledby="chart-tab" tabindex="0">
+                <div id="timesChart" style="width: 100%;min-height:390px;"></div>
               </div>
             </div>
-            <div class="tab-pane fade" id="chart-tab-pane" role="tabpanel" aria-labelledby="chart-tab" tabindex="0">
-              <div id="timesChart" style="width: 100%;min-height:390px;"></div>
-            </div>
+            <table class="avg-table table table-dark table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th scope="col" colspan="2" class="text-center"><span class="fw-semibold">Averages</span>&nbsp;<sup><abbr title="Till now, not calendar">?</abbr></sup></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Session</td>
+                  <td><span id="avgSession"></span></td>
+                </tr>
+                <tr>
+                  <td>Day</td>
+                  <td><span id="avgDay"></span></td>
+                </tr>
+                <tr>
+                  <td>Week</td>
+                  <td><span id="avgWeek"></span></td>
+                </tr>
+                <tr>
+                  <td>Month</td>
+                  <td><span id="avgMonth"></span></td>
+                </tr>
+                <tr>
+                  <td>Year</td>
+                  <td><span id="avgYear"></span></td>
+                </tr>
+                <tr>
+                  <td>All-time</td>
+                  <td><span id="avgAllTime"></span></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </main>
         <footer class="container-fluid mt-auto text-muted bg-dark-subtle rounded-top py-2 px-4 d-flex justify-content-center align-items-center">
           <span>Stopwatch © Terra</span>
           <a class="nav-link mx-2" href="https://github.com/itzTerra" target="_blank"><i class="bi bi-github"></i></a>
         </footer>
+
+        <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title fs-5">Delete set</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                Are you sure you want to delete current set? Its time history will be lost.
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button onclick="deleteCurSet()" type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
