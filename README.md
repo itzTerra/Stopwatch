@@ -11,6 +11,7 @@ Static [website](itzterra.github.io/Stopwatch/) that implements basic stopwatch 
 - can store multiple sets of time measures
 
 ## To do
+- effects while counting (with [**LineShader**](itzterra.github.io/LineShader/))
 - trend in graph
 - activity calendar (like on GitHub)
 - other statistics
