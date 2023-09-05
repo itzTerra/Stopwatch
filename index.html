@@ -13,7 +13,14 @@
         <link href="static/css/style.css" rel="stylesheet" type="text/css">
     </head>
     <body>
-        <main class="container bg-body rounded p-3 px-md-4">
+        <div class="crazy-bg" id="art"></div>
+        <main class="container bg-body rounded p-3 px-md-4 position-relative">
+          <div class="form-check effects-check">
+            <input class="form-check-input" type="checkbox" id="effectsCheckbox">
+            <label class="form-check-label" for="effectsCheckbox">
+              Effects off
+            </label>
+          </div>
           <div class="d-flex flex-column align-items-center justify-content-center my-2">
             <div class="bg-body-secondary px-5 rounded-5 text-white">
               <span id="minutes" class="me-4"><span id="min"></span><span class="unit">m</span></span>
@@ -86,9 +93,9 @@
               </div>
             </div>
             <table class="avg-table table table-dark table-bordered table-hover">
-              <thead>
+              <thead class="">
                 <tr>
-                  <th scope="col" colspan="2" class="text-center"><span class="fw-semibold">Averages</span>&nbsp;<sup><abbr title="Till now, not calendar">?</abbr></sup></th>
+                  <th scope="col" colspan="2" class="text-center bg-primary-subtle"><span class="fw-semibold">Averages</span>&nbsp;<sup><abbr title="Till now, not calendar">?</abbr></sup></th>
                 </tr>
               </thead>
               <tbody>
@@ -150,7 +157,9 @@
         <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/export/bootstrap-table-export.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/regression/2.0.1/regression.min.js" integrity="sha512-0k6FXllQktdobw8Nc8KQN2WtZrOuxpMn7jC2RKCF6LR7EdOhhrg3H5cBPxhs3CFzQVlO6ni1B9SDLUPhBs0Alg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
 
+        <script src="static/js/lineArt.js"></script>
         <script src="static/js/utils.js"></script>
         <script src="static/js/script.js"></script>
         <script src="static/js/fileReader.js"></script>

@@ -28,6 +28,9 @@ const timeCountLabel = document.getElementById("time-count");
 const $historyTable = $("#history-table");
 const historyTableBody = document.querySelector("#history-table tbody");
 
+const artDiv = document.getElementById("art");
+const effectsCheckbox = document.getElementById("effectsCheckbox");
+
 //  ################################## VARIABLES ####################################
 
 const DEFAULT_SET_NAME = "default";
@@ -50,6 +53,77 @@ const timeHistory = new Map();
 timeHistory.set("default", {});
 
 // ######################################## INIT ###########################################
+
+// ##################### Art ##########################
+
+const artSettings = new ArtSettings({
+  intensityMode: "light",
+  width: "full",
+  height: "full",
+  showImage: false,
+  fps: 30,
+  imageDelay: 12,
+
+  color: "#55bbbb",
+  opacity: 15,
+  bg: "#121212",
+  bgOpacity: 80,
+  vanishRate: 0,
+
+  startAgents: 300,
+  maxAgents: 1500,
+  branchiness: 0.5,
+  moveSpeed: 0.8,
+  moveSpeedContrast: 1,
+
+  lineLenMin: 30,
+  lineLenMax: 300,
+
+  lineLenContrast: 4,
+  intensityRadius: 8,
+  sightRadius: 40,
+  contrast: 1.5,
+  brightness: 1,
+});
+
+const ART_SOURCES = [
+  "static/art/1.jpg",
+  "static/art/2.jpg",
+  "static/art/3.jpg",
+  "static/art/4.jpg",
+  "static/art/5.jpg",
+  "static/art/6.jpg",
+  "static/art/7.jpg",
+  "static/art/8.jpg",
+  "static/art/9.jpg",
+  "static/art/9.jpg",
+];
+
+let artImages;
+LineArt.getImagesFromSources(ART_SOURCES).then((res) => {
+  artImages = res;
+});
+let lineArt;
+
+function clearArt() {
+  artDiv.innerHTML = "";
+  lineArt.p5.remove();
+  lineArt = null;
+}
+
+function handleArt() {
+  if (effectsCheckbox.checked) {
+    if (lineArt) {
+      clearArt();
+    }
+  } else {
+    if (lineArt) {
+      lineArt.playPause();
+    } else {
+      lineArt = new LineArt("art", artSettings, artImages, true);
+    }
+  }
+}
 
 // ##################### Bootstrap-Table ######################
 
@@ -186,6 +260,8 @@ function startStop() {
     saveButton.disabled = false;
   }
   started = !started;
+
+  handleArt();
 }
 
 // Interval function after Start is pressed
@@ -224,6 +300,8 @@ function reset() {
 
   toggleButton.textContent = "Start";
   saveButton.disabled = true;
+
+  clearArt();
 }
 
 // Bound to Save button
@@ -433,8 +511,8 @@ function appendHistoryRow(
     ms: timeMs,
   };
 
-  if (markSession){
-    curHistory[timeID].session = true
+  if (markSession) {
+    curHistory[timeID].session = true;
   }
 
   if (insertToTable) {
