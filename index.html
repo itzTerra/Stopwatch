@@ -32,6 +32,11 @@
               <button class="btn btn-secondary" onclick="save()" id="savebtn" disabled>Save</button>
               <button class="btn btn-lg btn-danger" onclick="reset()" id="resetbtn">Reset</button>
             </div>
+            <div class="d-flex align-items-center gap-2">
+              <label for="notifyInput" class="text-muted small text-nowrap">Notify at:</label>
+              <input type="text" id="notifyInput" class="form-control form-control-sm bg-dark-subtle" placeholder="mm:ss" style="width:80px" oninput="setNotificationTarget(this.value)">
+              <span id="notifyStatus" class="small text-muted" style="white-space:nowrap"></span>
+            </div>
           </div>
           <div class="my-3 d-flex column-gap-4 row-gap-2 flex-wrap flex-sm-nowrap">
             <div class="input-group">

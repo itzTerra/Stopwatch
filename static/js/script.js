@@ -31,6 +31,9 @@ const historyTableBody = document.querySelector("#history-table tbody");
 const artDiv = document.getElementById("art");
 const effectsCheckbox = document.getElementById("effectsCheckbox");
 
+const notifyInput = document.getElementById("notifyInput");
+const notifyStatus = document.getElementById("notifyStatus");
+
 //  ################################## VARIABLES ####################################
 
 const DEFAULT_SET_NAME = "default";
@@ -47,6 +50,10 @@ var elapsedTime = 0;
 var timerInterval;
 var started = false;
 var shownMinutes = false;
+
+// Notification
+var notificationTargetMs = null;
+var notificationFired = false;
 
 // In-memory database to store saved times
 const timeHistory = new Map();
@@ -253,6 +260,7 @@ function startStop() {
     timerInterval = setInterval(updateTimer, 10);
     toggleButton.textContent = "Stop";
     saveButton.disabled = true;
+    notificationFired = false;
   } else {
     // Stop timer
     clearInterval(timerInterval);
@@ -283,6 +291,11 @@ function updateTimer() {
   minLabel.textContent = minutes > 0 ? minutes : "";
   secLabel.textContent = minutes > 0 ? seconds.padStart(2, "0") : seconds;
   msLabel.textContent = milliseconds;
+
+  if (notificationTargetMs !== null && !notificationFired && elapsedTime >= notificationTargetMs) {
+    notificationFired = true;
+    fireNotification();
+  }
 }
 
 // Tied to Reset button
@@ -300,6 +313,7 @@ function reset() {
 
   toggleButton.textContent = "Start";
   saveButton.disabled = true;
+  notificationFired = false;
 
   clearArt();
 }
@@ -541,4 +555,65 @@ function saveTimeHistory() {
 // Returns Object in form {timeID: {date: number, ms:number}} of current set
 function getCurTimeHistory() {
   return timeHistory.get(currentSet);
+}
+
+// ################## NOTIFICATIONS #################
+
+function setNotificationTarget(val) {
+  val = val.trim();
+  if (!val) {
+    notificationTargetMs = null;
+    notifyStatus.textContent = "";
+    return;
+  }
+
+  const parts = val.split(":").map((p) => parseInt(p));
+  if (parts.length === 1 && !isNaN(parts[0])) {
+    notificationTargetMs = parts[0] * 1000;
+  } else if (parts.length === 2 && parts.every((p) => !isNaN(p))) {
+    notificationTargetMs = (parts[0] * 60 + parts[1]) * 1000;
+  } else {
+    notificationTargetMs = null;
+    notifyStatus.textContent = "invalid";
+    notifyStatus.className = "small text-danger";
+    return;
+  }
+
+  notificationFired = false;
+  requestNotificationPermission();
+}
+
+function requestNotificationPermission() {
+  if (!("Notification" in window)) {
+    notifyStatus.textContent = "not supported";
+    notifyStatus.className = "small text-warning";
+    return;
+  }
+  if (Notification.permission === "granted") {
+    notifyStatus.textContent = "set";
+    notifyStatus.className = "small text-success";
+  } else if (Notification.permission !== "denied") {
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") {
+        notifyStatus.textContent = "set";
+        notifyStatus.className = "small text-success";
+      } else {
+        notifyStatus.textContent = "blocked";
+        notifyStatus.className = "small text-danger";
+      }
+    });
+  } else {
+    notifyStatus.textContent = "blocked";
+    notifyStatus.className = "small text-danger";
+  }
+}
+
+function fireNotification() {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const targetStr = msToTimeStr(notificationTargetMs, false);
+  new Notification("Stopwatch", {
+    body: `Target time ${targetStr} reached!`,
+    icon: "favicon.svg",
+    requireInteraction: true,
+  });
 }
